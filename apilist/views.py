@@ -3,8 +3,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserRegistrationSerializer
-from .models import User
+from .serializers import UserRegistrationSerializer, UserSerializer
+from .models import CustomUser
 
 # Create your views here.
 
@@ -28,7 +28,7 @@ class UserLogin(APIView):
         data = request.data
         username = data.get('username', None)
         password = data.get('password', None)
-        user = User.objects.filter(username=username).first()
+        user = CustomUser.objects.filter(username=username).first()
         
         # if user is None or password is None:
             # return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -45,3 +45,12 @@ class UserLogin(APIView):
             'access token': str(refresh.access_token),
               'refresh token': str(refresh),
         }, status=status.HTTP_200_OK)
+    
+
+class UserListAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        users = CustomUser.objects.all()
+        serializer = UserSerializer(users, many=True)  # UserSerializer for displaying user details
+        return Response(serializer.data, status=status.HTTP_200_OK)
