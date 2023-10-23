@@ -8,7 +8,7 @@ from .models import User
 
 # Create your views here.
 
-class CustomUserRegistration(APIView):
+class UserRegistration(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -21,7 +21,7 @@ class CustomUserRegistration(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CustomUserLogin(APIView):
+class UserLogin(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -30,10 +30,13 @@ class CustomUserLogin(APIView):
         password = data.get('password', None)
         user = User.objects.filter(username=username).first()
         
-        if user is None:
-            return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        # if user is None or password is None:
+            # return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         
-        if not user.check_password(password):
+        # if not user.check_password(password):
+        #     return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if user is None or password is None or not user.check_password(password):
             return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = RefreshToken.for_user(user)
