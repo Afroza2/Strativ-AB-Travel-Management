@@ -18,3 +18,9 @@ Now let's get to the interesting part.
 3. Let's say your friend wants to travel as well and needs your help. Let's create an API where you take your friend's location, their destination, and the date of travel. Compare the temperature of those two locations at 2 PM on that day and return a response deciding if they should travel there or not. Hint: You might need to periodically fetch data and store it somewhere.
 4. Constraint: API response should not exceed 0.5 seconds
 
+# How to run the project?
+
+1. run "pip install -r requirements.txt" on preferably a 3.10-based Python virtual environment.
+2. Run Celery worker in one terminal - celery -A travelmanagement worker -l info
+3. Run Celery beats in another terminal - celery -A travelmanagement beat -l info
+4. Run Django in another terminal - python manage.py runserver
