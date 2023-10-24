@@ -6,7 +6,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import CustomUser
-from apilist.tasks import fetch_and_store_temperatures
+from apilist.tasks import fetch_and_store_temperature
+from django.core.cache import cache
+import datetime
 
 # Create your views here.
 
@@ -57,52 +59,31 @@ class UserListAPIView(APIView):
         serializer = UserSerializer(users, many=True)  # UserSerializer for displaying user details
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-
 class CoolestDistrictsAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         try:
-            
             response = requests.get('https://raw.githubusercontent.com/strativ-dev/technical-screening-test/main/bd-districts.json')
-            response.raise_for_status()  
+            response.raise_for_status()
 
-            districts_data = response.json().get('districts', [])  
+            districts_data = response.json().get('districts', [])
 
             coolest_districts = []
 
-            
             for district in districts_data:
-                latitude = district.get('lat')  
-                longitude = district.get('long')  
+                cache_key = f'temperature_at_2pm_{district["name"]}'
+                temperature_at_2pm = cache.get(cache_key)
 
-                if latitude is not None and longitude is not None:
-                    api_url = f'https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m&timezone=GMT'
+                if temperature_at_2pm is not None:
+                    # Calculate average temperature for the district
+                    average_temperature = sum(temperature_at_2pm) / len(temperature_at_2pm)
+                    coolest_districts.append({
+                        'district_name': district['name'],
+                        'average_temperature_2pm': average_temperature
+                    })
 
-                    # print(f"Fetching data for {district.get('name')} - {api_url}")  
-                    
-                    weather_response = requests.get(api_url)
-                    weather_response.raise_for_status()  
-
-                    weather_data = weather_response.json()
-
-                    # print("data", weather_data) 
-
-                    hourly_data = weather_data.get('hourly', {})
-                    temperature_2m_values = hourly_data.get('temperature_2m', [])
-
-                    # print(f"Temperature 2m values: {temperature_2m_values}")  
-
-                    
-                    avg_temp_2pm = sum(temperature_2m_values) / len(temperature_2m_values) if temperature_2m_values else None
-
-                    if avg_temp_2pm is not None:
-                        coolest_districts.append({
-                            'district_name': district.get('name'), 
-                            'average_temperature_2pm': avg_temp_2pm
-                        })
-
-            
+            # Sort the coolest districts based on average temperature
             coolest_districts.sort(key=lambda x: x['average_temperature_2pm'])
             top_10_coolest_districts = coolest_districts[:10]
 
@@ -110,26 +91,22 @@ class CoolestDistrictsAPIView(APIView):
 
         except requests.exceptions.HTTPError as err:
             return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
 
-class WeatherDataView(APIView):
+
+
+class FetchTemperatureView(APIView):
     def get(self, request, *args, **kwargs):
-        try:
-            latitude = float(request.GET.get('lat'))
-            longitude = float(request.GET.get('long'))
-            travel_date = request.GET.get('travel_date')  
+    
+        fetch_and_store_temperature.delay()
+        temperature_at_2pm = cache.get('temperature_at_2pm')
 
-            fetch_and_store_temperatures.apply_async(args=[latitude, longitude, travel_date], countdown=10)
-
-            return Response({'message': 'Weather data fetching task scheduled successfully!'}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-
-
+        if temperature_at_2pm is not None:
+    # Do something with the temperature data
+            print(f'Temperature at 2 PM: {temperature_at_2pm}')
+        else:
+            # The data is not in the cache, handle this situation accordingly
+            print('Temperature data is not available in the cache.')
+        return Response({'message': 'Temperature fetching task has been initiated.'})
 

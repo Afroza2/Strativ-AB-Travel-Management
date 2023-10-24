@@ -1,54 +1,44 @@
+from django.core.cache import cache
 from celery import shared_task
-
-from datetime import datetime
 import requests
-
-# @shared_task
-# def fetch_hourly_data_function(s):
-#     return s
-
-# @shared_task
-# def add(x, y):
-#     return x + y
-
-# @shared_task
-# def fetch_and_store_temperatures(latitude, longitude, travel_date):
-
-#     from .models import WeatherData
-
-#     url = "https://api.open-meteo.com/v1/forecast"
-#     params = {
-#         "latitude": latitude,
-#         "longitude": longitude,
-#         "hourly": "temperature_2m",
-#         "start": travel_date + "T14:00:00Z",  # Set the time to 2 PM on the travel date
-#         "end": travel_date + "T14:00:00Z",  # Only fetch data for 2 PM on the travel date
-#     }
+import datetime
 
 @shared_task
-def fetch_and_store_temperatures(latitude, longitude, travel_date):
-    from .models import WeatherData
-    url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "hourly": "temperature_2m",
-        "start": travel_date + "T14:00:00Z",  # Set the time to 2 PM on the travel date
-        "end": travel_date + "T14:00:00Z",  # Only fetch data for 2 PM on the travel date
-    }
-    
-    response = requests.get(url, params=params)
-    data = response.json()
+def fetch_and_store_temperature():
+    try:
+        response = requests.get('https://raw.githubusercontent.com/strativ-dev/technical-screening-test/main/bd-districts.json')
+        response.raise_for_status()
 
-    # Extract temperature at 2 PM for the specified date
-    temperature = data.get("hourly", {}).get("temperature_2m", [])
-    if temperature:
-        temperature = temperature[0]["value"]  # Get the temperature at 2 PM on the travel date
-    else:
-        temperature = None
+        districts_data = response.json().get('districts', [])
 
-    # Store data in the database (WeatherData model)
-    WeatherData.objects.create(latitude=latitude, longitude=longitude, date=travel_date, temperature=temperature)
+        all_temperatures = []
 
-    return f"Weather data for {travel_date} fetched and stored successfully!"
+        for district in districts_data:
+            latitude = district.get('lat')
+            longitude = district.get('long')
 
+            if latitude is not None and longitude is not None:
+                api_url = f'https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m&timezone=GMT'
+
+                weather_response = requests.get(api_url)
+                weather_response.raise_for_status()
+
+                weather_data = weather_response.json()
+                hourly_data = weather_data.get('hourly', {})
+                temperature_at_2pm = hourly_data.get('temperature_2m', [])
+
+                # Cache key for each district without specifying a travel date
+                cache_key = f'temperature_at_2pm_{district["name"]}'
+                cache.set(cache_key, temperature_at_2pm)
+
+                all_temperatures.extend(temperature_at_2pm)
+
+        # Store all temperatures in a single cache key
+        cache.set('temperature_data', all_temperatures)
+
+    except requests.exceptions.RequestException as e:
+        # Handle API request exceptions
+        print(f"Error fetching weather data: {e}")
+    except Exception as e:
+        # Handle other exceptions
+        print(f"Error: {e}")
