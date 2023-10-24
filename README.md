@@ -24,3 +24,4 @@ Now let's get to the interesting part.
 2. Run Celery worker in one terminal - celery -A travelmanagement worker -l info
 3. Run Celery beats in another terminal - celery -A travelmanagement beat -l info
 4. Run Django in another terminal - python manage.py runserver
+5. To run migrations, run "python manage.py makemigrations", "python manage.py migrate" and "python manage.py migrate django_celery_beat"
