@@ -9,7 +9,7 @@ media
 apilist/__pycache__/
 apilist/migrations/__pycache__/
 travelmanagement/__pycache__/
-travelmanagement/settings.py
+
 .vscode/
 
 

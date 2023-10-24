@@ -51,6 +51,7 @@ Pillow==10.0.0
 prompt-toolkit==3.0.39
 psycopg2-binary==2.9.7
 py2neo==2021.2.3
+pyclean==2.7.5
 pycparser==2.21
 pydantic==2.3.0
 pydantic_core==2.6.3

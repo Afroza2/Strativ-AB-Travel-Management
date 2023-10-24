@@ -31,6 +31,8 @@ def fetch_and_store_temperature():
                 cache_key = f'temperature_at_2pm_{district["name"]}'
                 cache.set(cache_key, temperature_at_2pm)
 
+                # print("checking", cache.get(cache_key))
+
                 all_temperatures.extend(temperature_at_2pm)
 
         # Store all temperatures in a single cache key
