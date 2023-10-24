@@ -21,11 +21,3 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
     
-class WeatherData(models.Model):
-    district = models.CharField(max_length=100)
-    date = models.DateField()
-    time = models.TimeField()
-    temperature = models.FloatField()
-
-    def __str__(self):
-        return f"{self.district} - {self.date} {self.time}: {self.temperature}°C"

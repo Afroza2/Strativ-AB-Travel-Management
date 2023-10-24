@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import CustomUser
+from apilist.tasks import fetch_and_store_temperatures
 
 # Create your views here.
 
@@ -112,6 +113,22 @@ class CoolestDistrictsAPIView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class WeatherDataView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            latitude = float(request.GET.get('lat'))
+            longitude = float(request.GET.get('long'))
+            travel_date = request.GET.get('travel_date')  
+
+            fetch_and_store_temperatures.apply_async(args=[latitude, longitude, travel_date], countdown=10)
+
+            return Response({'message': 'Weather data fetching task scheduled successfully!'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
 
