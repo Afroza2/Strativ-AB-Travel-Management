@@ -20,3 +20,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     #         password=validated_data['password']
     #     )
     #     return user
+
+class CompareTemperaturesSerializer(serializers.Serializer):
+    user_district = serializers.CharField()
+    friend_district = serializers.CharField()
+    travel_date = serializers.DateField()
+    temperature = serializers.FloatField()
