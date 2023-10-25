@@ -96,50 +96,6 @@ class CoolestDistrictsAPIView(APIView):
 
 
 
-# class DecisionMakingAPIView(APIView):
-#     permission_classes = [permissions.IsAuthenticated]
-
-#     def post(self, request):
-#         try:
-#             data = request.data
-#             source_district_name = data.get('source_district_name')
-#             destination_district_name = data.get('destination_district_name')
-
-#             response = requests.get('https://raw.githubusercontent.com/strativ-dev/technical-screening-test/main/bd-districts.json')
-#             response.raise_for_status()
-
-#             districts_data = response.json().get('districts', [])
-
-#             source_temperatures = None
-#             destination_temperatures = None
-
-#             for district in districts_data:
-#                 if district['name'] == source_district_name:
-#                     source_temperatures = cache.get(f'temperature_at_2pm_{district["name"]}')
-#                 elif district['name'] == destination_district_name:
-#                     destination_temperatures = cache.get(f'temperature_at_2pm_{district["name"]}')
-
-#                 # if source_temperatures and destination_temperatures:
-#                 #     break
-
-#             if source_temperatures is not None and destination_temperatures is not None:
-#                 source_average_temperature = sum(source_temperatures) / len(source_temperatures)
-#                 destination_average_temperature = sum(destination_temperatures) / len(destination_temperatures)
-
-#                 print("Source Temperatures:", source_temperatures)
-#                 print("Destination Temperatures:", destination_temperatures)
-
-
-#                 decision = "Source location is cooler." if source_average_temperature < destination_average_temperature else "Destination location is cooler."
-
-#                 return Response({'decision': decision}, status=status.HTTP_200_OK)
-#             else:
-#                 return Response({'error': 'Temperature data not available for the specified source or destination district.'}, status=status.HTTP_404_NOT_FOUND)
-
-#         except requests.exceptions.HTTPError as err:
-#             return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-#         except Exception as e:
-#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DecisionMakingAPIView(APIView):
@@ -151,40 +107,31 @@ class DecisionMakingAPIView(APIView):
             source_district_name = data.get('source_district_name')
             destination_district_name = data.get('destination_district_name')
 
-            # Retrieve all temperatures from the cache
-            all_temperatures = cache.get('temperature_data')
+            # Retrieve temperatures for source district
+            source_cache_key = f'temperature_at_2pm_{source_district_name}'
+            source_temperature_at_2pm = cache.get(source_cache_key)
 
-            print("temp 1", all_temperatures[:10])
+            # Retrieve temperatures for destination district
+            destination_cache_key = f'temperature_at_2pm_{destination_district_name}'
+            destination_temperature_at_2pm = cache.get(destination_cache_key)
 
-            if all_temperatures is not None:
-                print("meow")
-                # Filter temperatures for source district
-                source_temperatures = [temp for temp in all_temperatures if temp['name'] == source_district_name]
+            if source_temperature_at_2pm is not None and destination_temperature_at_2pm is not None:
+                # Calculate average temperature for the source district
+                source_average_temperature = sum(source_temperature_at_2pm) / len(source_temperature_at_2pm)
 
-                print("source",source_temperatures)
+                # Calculate average temperature for the destination district
+                destination_average_temperature = sum(destination_temperature_at_2pm) / len(destination_temperature_at_2pm)
 
-                # Filter temperatures for destination district
-                destination_temperatures = [temp for temp in all_temperatures if temp['districts'] == destination_district_name]
-
-                if source_temperatures and destination_temperatures:
-                    # Calculate average temperatures for source and destination districts
-                    source_average_temperature = sum(source_temperatures) / len(source_temperatures)
-                    destination_average_temperature = sum(destination_temperatures) / len(destination_temperatures)
-
-                    # Compare average temperatures and make a decision
-                    decision = "Source location is cooler." if source_average_temperature < destination_average_temperature else "Destination location is cooler."
-
-                    return Response({'decision': decision}, status=status.HTTP_200_OK)
+                # Compare average temperatures and make a travel recommendation
+                if source_average_temperature < destination_average_temperature:
+                    recommendation = f"Traveling from {source_district_name} to {destination_district_name} is Recommended as destination is cooler."
                 else:
-                    return Response({'error': 'Temperature data not available for the specified source or destination district.'}, status=status.HTTP_404_NOT_FOUND)
+                    recommendation = f"Traveling from {source_district_name} to {destination_district_name} is NOT Recommended as destination is hotter."
+
+                return Response({'recommendation': recommendation}, status=status.HTTP_200_OK)
             else:
-                return Response({'error': 'Temperature data not available for any district.'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'Temperature data not available for the specified source or destination district.'}, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
             # Handle exceptions if necessary
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-            # return Response({"meow"})
-
-           
-        
