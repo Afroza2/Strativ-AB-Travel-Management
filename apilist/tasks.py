@@ -18,7 +18,7 @@ def fetch_and_store_temperature():
             longitude = district.get('long')
 
             if latitude is not None and longitude is not None:
-                api_url = f'https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m&timezone=GMT'
+                api_url = f'https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m&timezone=GMT&forecast_days=7'
 
                 weather_response = requests.get(api_url)
                 weather_response.raise_for_status()
