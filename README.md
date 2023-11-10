@@ -16,7 +16,8 @@ Now let's get to the interesting part.
 1. Let's make an API for the coolest 10 districts based on the average temperature at 2pm for the next 7 days.
 2. Now as we got the list, where do you want to travel and why?
 3. Let's say your friend wants to travel as well and needs your help. Let's create an API where you take your friend's location, their destination, and the date of travel. Compare the temperature of those two locations at 2 PM on that day and return a response deciding if they should travel there or not. Hint: You might need to periodically fetch data and store it somewhere.
-4. Constraint: API response should not exceed 0.5 seconds
+4. Constraint: API response should not exceed 0.5 seconds.
+5. Train a simple model that forecasts the weather conditions in a given future date. To simplify things, restrict predictions to the Dhaka district. After training the model, the model should be query-able via a simple API. For example, your API should be able to predict the temperature at any future date (beyond the 7 days provided by OpenMeteo). *Note: If you feel that you do not have enough time and want to simplify further, provide a written solution plan for this section instead of a coded solution.*
 
 # How to run the project?
 
