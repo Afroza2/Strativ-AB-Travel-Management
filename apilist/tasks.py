@@ -1,7 +1,22 @@
 from django.core.cache import cache
+from prophet.serialize import model_to_json, model_from_json
+from rest_framework.response import Response
+from rest_framework import status
 from celery import shared_task
 import requests
 import datetime
+
+@shared_task
+def load_model():
+    try:
+        # Load serialized model
+        with open('./apilist/utils/model.json', 'r') as fin:
+            m = model_from_json(fin.read())
+        # Cache the model for future requests
+        cache.set('serialized_model', m, timeout=None)  # Set timeout=None for indefinite caching
+    except FileNotFoundError:
+            # Return an error response if the model file is not found with status code 500 (Internal Server Error)
+            return Response({'error': 'Model file not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @shared_task
 def fetch_and_store_temperature():

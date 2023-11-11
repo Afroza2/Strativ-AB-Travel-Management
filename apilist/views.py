@@ -143,9 +143,13 @@ class DecisionMakingAPIView(APIView):
 class WeatherPredictionAPIView(APIView):
     def post(self, request):
         try:
-            # Load serialized model
-            with open('../utils/model.json', 'r') as fin:
-                m = model_from_json(fin.read())
+            m = cache.get('serialized_model')
+            if m is None:
+                with open('./apilist/utils/model.json', 'r') as fin:
+                    m = load_model()
+                # Cache the model for future requests
+                cache.set('serialized_model', m, timeout=None)  # Set timeout=None for indefinite caching
+
 
             # Extract input date from the request data
             input_date_str = request.data.get('date')
@@ -163,9 +167,7 @@ class WeatherPredictionAPIView(APIView):
             # Return the predicted temperature as a JSON response with status code 200 (OK)
             return Response({'predicted_temperature': predicted_temperature}, status=status.HTTP_200_OK)
 
-        except FileNotFoundError:
-            # Return an error response if the model file is not found with status code 500 (Internal Server Error)
-            return Response({'error': 'Model file not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
         except Exception as e:
             # Return an error response for other exceptions with status code 500 (Internal Server Error)
