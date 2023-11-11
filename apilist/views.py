@@ -8,7 +8,9 @@ from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import CustomUser
 from apilist.tasks import fetch_and_store_temperature
 from django.core.cache import cache
-
+from prophet.serialize import model_from_json
+import pandas as pd
+from datetime import datetime
 
 # Create your views here.
 
@@ -134,4 +136,37 @@ class DecisionMakingAPIView(APIView):
 
         except Exception as e:
             # Handle exceptions if necessary
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+class WeatherPredictionAPIView(APIView):
+    def post(self, request):
+        try:
+            # Load serialized model
+            with open('../utils/model.json', 'r') as fin:
+                m = model_from_json(fin.read())
+
+            # Extract input date from the request data
+            input_date_str = request.data.get('date')
+            input_date = datetime.strptime(input_date_str, '%Y-%m-%d')
+
+            # Create a dataframe with the input date
+            future_df = pd.DataFrame({'ds': [input_date]})
+
+            # Make predictions
+            forecast = m.predict(future_df)
+
+            # Extract the predicted temperature for the input date
+            predicted_temperature = forecast.loc[0, 'yhat']
+
+            # Return the predicted temperature as a JSON response with status code 200 (OK)
+            return Response({'predicted_temperature': predicted_temperature}, status=status.HTTP_200_OK)
+
+        except FileNotFoundError:
+            # Return an error response if the model file is not found with status code 500 (Internal Server Error)
+            return Response({'error': 'Model file not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except Exception as e:
+            # Return an error response for other exceptions with status code 500 (Internal Server Error)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
