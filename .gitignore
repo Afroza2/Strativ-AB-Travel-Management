@@ -12,7 +12,7 @@ apilist/migrations/__pycache__/
 travelmanagement/__pycache__/
 
 .vscode/
-
+.cache.sqlite
 
 # Backup files # 
 *.bak 
