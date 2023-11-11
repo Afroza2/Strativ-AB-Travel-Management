@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import CustomUser
-from apilist.tasks import fetch_and_store_temperature
+from apilist.tasks import fetch_and_store_temperature, load_model
 from django.core.cache import cache
 from prophet.serialize import model_from_json
 import pandas as pd
@@ -145,30 +145,31 @@ class WeatherPredictionAPIView(APIView):
         try:
             m = cache.get('serialized_model')
             if m is None:
-                with open('./apilist/utils/model.json', 'r') as fin:
-                    m = load_model()
-                # Cache the model for future requests
-                cache.set('serialized_model', m, timeout=None)  # Set timeout=None for indefinite caching
+                # Enqueue a background task to load the model
+                m = load_model()
 
+                cache.set('serialized_model', m, timeout=None)  
 
-            # Extract input date from the request data
+            # print("checking", m)
+            
             input_date_str = request.data.get('date')
             input_date = datetime.strptime(input_date_str, '%Y-%m-%d')
 
-            # Create a dataframe with the input date
+            
             future_df = pd.DataFrame({'ds': [input_date]})
 
-            # Make predictions
+            
             forecast = m.predict(future_df)
 
-            # Extract the predicted temperature for the input date
+            
             predicted_temperature = forecast.loc[0, 'yhat']
 
-            # Return the predicted temperature as a JSON response with status code 200 (OK)
+            
             return Response({'predicted_temperature': predicted_temperature}, status=status.HTTP_200_OK)
 
-        
+        except FileNotFoundError:
+            return Response({'error': 'Model file not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         except Exception as e:
-            # Return an error response for other exceptions with status code 500 (Internal Server Error)
+            
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
