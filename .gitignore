@@ -16,6 +16,7 @@ travelmanagement/__pycache__/
 
 # Backup files # 
 *.bak 
+*.json
 
 # If you are using PyCharm # 
 # User-specific stuff
