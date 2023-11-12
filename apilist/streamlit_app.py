@@ -18,7 +18,7 @@ if st.button('Submit'):
         result = response.json()
         predicted_temperature = result["predicted_temperature"]
         # Format the temperature to two decimal places
-        formatted_temperature = "{:.2f}".format(predicted_temperature)
+        formatted_temperature = "{:.2f}°C".format(predicted_temperature)
         st.write(f'Predicted Temperature: {formatted_temperature}')
     else:
         st.error('Error fetching data from the API')
