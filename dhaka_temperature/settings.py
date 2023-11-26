@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-q1c55dkh5)t%=sbde$t&k0^+s)l39syauohev^*)@d)hi-)4%o
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://predict-dhaka-temperature.streamlit.app/']
 
 
 # Application definition
