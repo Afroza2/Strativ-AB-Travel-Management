@@ -14,8 +14,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import os
+from django.conf import settings
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'travelmanagement.settings'
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "travelmanagement.settings")
+settings.configure()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
