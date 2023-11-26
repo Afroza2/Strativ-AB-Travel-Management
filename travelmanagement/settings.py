@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 import os
 from django.conf import settings
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "travelmanagement.settings")
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'travelmanagement.settings')
 settings.configure()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,12 +27,12 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://check-dhaka-temperature.streamlit.app/']
 
 
 # Application definition
