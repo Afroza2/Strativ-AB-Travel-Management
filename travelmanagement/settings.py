@@ -15,6 +15,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 from django.conf import settings
+from datetime import timedelta
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'travelmanagement.settings')
 settings.configure()
@@ -32,7 +33,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://check-dhaka-temperature.streamlit.app/']
+ALLOWED_HOSTS = ['https://check-dhaka-temperature.streamlit.app/', '127.0.0.1']
 
 
 # Application definition
